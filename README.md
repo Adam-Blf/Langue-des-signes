@@ -77,6 +77,3 @@ Les tests utilisent des landmarks synthétiques : ils s’exécutent très vite 
 - **Import manquant** : recréer l’environnement virtuel et réinstaller les dépendances (`pip install -r requirements.txt`).
 - **Modèle absent** : le pipeline fonctionne uniquement avec les règles heuristiques. Relancer l’entraînement pour générer `model.pkl`.
 
-## Licence
-
-Le projet conserve la licence du dépôt d’origine. Consultez le dépôt initial pour les termes complets.
