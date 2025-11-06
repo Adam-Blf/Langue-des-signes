@@ -1,0 +1,27 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnements virtuels
+venv/
+.venv/
+.env/
+
+# Fichiers de build / packaging
+build/
+dist/
+*.egg-info/
+
+# Fichiers de logs / temporaires
+*.log
+*.tmp
+lsf_detector.log
+*.exe
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Autres
+.ipynb_checkpoints/
