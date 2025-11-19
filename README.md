@@ -54,8 +54,8 @@ Langue-des-signes/
 ### 🚀 Démarrage Rapide
 
 ```bash
-git clone https://github.com/Razane1414/Hand-Tracking---Langue-des-signes.git
-cd Hand-Tracking---Langue-des-signes
+git clone https://github.com/Adam-Blf/Langue-des-signes.git
+cd Langue-des-signes
 python -m venv .venv
 .venv\Scripts\activate  # PowerShell Windows
 pip install -r requirements.txt
@@ -158,8 +158,8 @@ Langue-des-signes/
 ### 🚀 Quick Start
 
 ```bash
-git clone https://github.com/Razane1414/Hand-Tracking---Langue-des-signes.git
-cd Hand-Tracking---Langue-des-signes
+git clone https://github.com/Adam-Blf/Langue-des-signes.git
+cd Langue-des-signes
 python -m venv .venv
 .venv\Scripts\activate  # Windows PowerShell
 pip install -r requirements.txt
@@ -217,6 +217,6 @@ This project is open source. See LICENSE file for details.
 ---
 
 **Author**: Razane & Adam Beloucif  
-**Repository**: [github.com/Razane1414/Hand-Tracking---Langue-des-signes](https://github.com/Razane1414/Hand-Tracking---Langue-des-signes)
+**Repository**: [github.com/Adam-Blf/Langue-des-signes](https://github.com/Adam-Blf/Langue-des-signes)
 
 For bug reports or feature requests, open an issue on GitHub.
