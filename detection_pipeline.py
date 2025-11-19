@@ -120,22 +120,33 @@ class SignDetectionPipeline:
 
 def extract_flattened_landmarks(hand_landmarks) -> Optional[Sequence[float]]:
     """Return a flattened list of relative landmark coordinates."""
-    landmarks: Sequence = getattr(hand_landmarks, "landmark", hand_landmarks)  # type: ignore[assignment]
-    if not isinstance(landmarks, Sequence) or len(landmarks) < 21:
+    try:
+        landmarks: Sequence = getattr(hand_landmarks, "landmark", hand_landmarks)  # type: ignore[assignment]
+        if not isinstance(landmarks, Sequence) or len(landmarks) < 21:
+            return None
+
+        wrist = landmarks[WRIST_INDEX]
+        if not hasattr(wrist, "x"):
+            return None
+
+        flattened = []
+        for landmark in landmarks:
+            try:
+                flattened.extend(
+                    (
+                        float(landmark.x) - float(wrist.x),
+                        float(landmark.y) - float(wrist.y),
+                        float(getattr(landmark, "z", 0.0)) - float(getattr(wrist, "z", 0.0)),
+                    )
+                )
+            except (AttributeError, ValueError, TypeError):
+                # Skip malformed landmarks
+                continue
+        
+        # Verify we have the expected number of coordinates (21 landmarks * 3 coords)
+        if len(flattened) != 63:
+            return None
+
+        return flattened
+    except Exception:
         return None
-
-    wrist = landmarks[WRIST_INDEX]
-    if not hasattr(wrist, "x"):
-        return None
-
-    flattened = []
-    for landmark in landmarks:
-        flattened.extend(
-            (
-                float(landmark.x) - float(wrist.x),
-                float(landmark.y) - float(wrist.y),
-                float(getattr(landmark, "z", 0.0)) - float(getattr(wrist, "z", 0.0)),
-            )
-        )
-
-    return flattened

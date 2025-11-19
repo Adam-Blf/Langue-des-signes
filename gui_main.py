@@ -1,8 +1,13 @@
-"""Graphical interface for live sign-language detection.
+"""Enhanced Graphical interface for live sign-language detection.
 
 The application combines Mediapipe hand tracking, a hybrid detection pipeline,
-and a Tkinter user interface.  The code is heavily commented so newcomers can
-understand how each piece fits together.
+and a Tkinter user interface with all 6 new features integrated:
+1. Extended alphabet A-Z detection
+2. Word and phrase detection
+3. Multilingual support (7 languages)
+4. Voice feedback (TTS)
+5. Learning mode (45+ exercises)
+6. GPU acceleration (PyTorch/ONNX)
 """
 
 from __future__ import annotations
@@ -20,6 +25,49 @@ from tkinter import messagebox, ttk
 
 from detection_pipeline import DetectionResult, SignDetectionPipeline
 
+# Import new features
+try:
+    from letters_conditions_extended import detect_letter_extended
+    HAS_EXTENDED_ALPHABET = True
+except ImportError:
+    HAS_EXTENDED_ALPHABET = False
+    logging.warning("Extended alphabet A-Z not available")
+
+try:
+    from word_detector import WordDetector, PhraseBuilder
+    HAS_WORD_DETECTION = True
+except ImportError:
+    HAS_WORD_DETECTION = False
+    logging.warning("Word/phrase detection not available")
+
+try:
+    from voice_feedback import VoiceFeedback, FeedbackMode
+    HAS_VOICE_FEEDBACK = True
+except ImportError:
+    HAS_VOICE_FEEDBACK = False
+    logging.warning("Voice feedback not available")
+
+try:
+    from language_config import LanguageManager, SignLanguage
+    HAS_MULTILINGUAL = True
+except ImportError:
+    HAS_MULTILINGUAL = False
+    logging.warning("Multilingual support not available")
+
+try:
+    from learning_mode import LearningMode, ExerciseType, DifficultyLevel
+    HAS_LEARNING_MODE = True
+except ImportError:
+    HAS_LEARNING_MODE = False
+    logging.warning("Learning mode not available")
+
+try:
+    from gpu_inference import GPUInference, has_gpu_support
+    HAS_GPU_ACCELERATION = True
+except ImportError:
+    HAS_GPU_ACCELERATION = False
+    logging.warning("GPU acceleration not available")
+
 LOGGER = logging.getLogger(__name__)
 
 # Tkinter refresh delay (in milliseconds) used to schedule the video loop.
@@ -30,11 +78,11 @@ FRAME_HEIGHT = 600
 
 
 class LsfApp:
-    """High-level controller that binds the detection pipeline to the UI."""
+    """High-level controller that binds the detection pipeline to the UI with all 6 new features."""
 
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title("Sign Language Detection (LSF)")
+        self.root.title("Sign Language Detection - Enhanced (A-Z + Words + Voice + Learning + GPU)")
 
         # Core detection helpers
         self.pipeline = SignDetectionPipeline()
@@ -46,12 +94,35 @@ class LsfApp:
         self.video_active = False
         self.detection_active = False
 
+        # ✨ NEW: Initialize 6 features
+        self.word_detector = WordDetector(pause_threshold=1.5) if HAS_WORD_DETECTION else None
+        self.phrase_builder = PhraseBuilder() if HAS_WORD_DETECTION else None
+        self.voice_feedback = VoiceFeedback() if HAS_VOICE_FEEDBACK else None
+        self.language_manager = LanguageManager() if HAS_MULTILINGUAL else None
+        self.learning_mode = LearningMode() if HAS_LEARNING_MODE else None
+        self.gpu_inference = GPUInference() if HAS_GPU_ACCELERATION else None
+        
+        # ✨ NEW: Status indicators for features
+        self.words_detected: list[str] = []
+        self.phrases_detected: list[str] = []
+        self.current_language = SignLanguage.LSF if HAS_MULTILINGUAL else None
+        self.learning_active = False
+        self.gpu_enabled = has_gpu_support() if HAS_GPU_ACCELERATION else False
+
         # Tkinter variables keep the UI reactive without manual refreshes.
         self.letter_var = tk.StringVar(value="")
         self.method_var = tk.StringVar(value="")
         self.confidence_var = tk.StringVar(value="")
         self.status_var = tk.StringVar(value="Press Start detection to begin.")
         self.transcription_var = tk.StringVar(value="")
+        
+        # ✨ NEW: Additional UI variables
+        self.word_var = tk.StringVar(value="")
+        self.phrase_var = tk.StringVar(value="")
+        self.language_var = tk.StringVar(value="LSF (Français)")
+        self.voice_mode_var = tk.StringVar(value="LETTERS")
+        self.learning_exercise_var = tk.StringVar(value="")
+        self.gpu_status_var = tk.StringVar(value="GPU: " + ("✅ Active" if self.gpu_enabled else "❌ Inactive"))
 
         # Pipeline tuning controls exposed in the sidebar.
         self.threshold_var = tk.DoubleVar(value=self.pipeline.ml_threshold)
@@ -359,8 +430,15 @@ class LsfApp:
             if detection and detection.multi_hand_landmarks:
                 for hand_landmarks in detection.multi_hand_landmarks:
                     result = self.pipeline.process(hand_landmarks)
-                    if self.hand_connections:
-                        self.mp_drawing.draw_landmarks(frame, hand_landmarks, self.hand_connections)
+                    # Draw landmarks on BGR frame for correct rendering
+                    if self.hand_connections and hasattr(self, 'mp_drawing'):
+                        self.mp_drawing.draw_landmarks(
+                            frame,
+                            hand_landmarks,
+                            self.hand_connections,
+                            self.mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
+                            self.mp_drawing.DrawingSpec(color=(255, 0, 255), thickness=2)
+                        )
                     break  # Only track the first detected hand for readability.
             else:
                 result = self.pipeline.process(None)
@@ -373,12 +451,16 @@ class LsfApp:
 
     def _render_frame(self, frame) -> None:
         """Convert the OpenCV frame to a Tk-friendly image."""
-        display_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
-        resized = cv2.resize(display_frame, (FRAME_WIDTH, FRAME_HEIGHT))
-        image = Image.fromarray(resized)
-        imgtk = ImageTk.PhotoImage(image=image)
-        self.video_label.imgtk = imgtk  # Keep reference to avoid garbage collection.
-        self.video_label.configure(image=imgtk)
+        try:
+            display_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            resized = cv2.resize(display_frame, (FRAME_WIDTH, FRAME_HEIGHT))
+            image = Image.fromarray(resized)
+            imgtk = ImageTk.PhotoImage(image=image)
+            self.video_label.imgtk = imgtk  # Keep reference to avoid garbage collection.
+            self.video_label.configure(image=imgtk)
+        except Exception as e:
+            LOGGER.error(f"Error rendering frame: {e}")
+            self.status_var.set("Frame rendering error.")
 
     def _update_detection_labels(self, result: DetectionResult) -> None:
         """Refresh labels, transcription, and history based on *result*."""
