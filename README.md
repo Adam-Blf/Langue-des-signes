@@ -342,7 +342,8 @@ Les tests utilisent des landmarks synthétiques et ne nécessitent pas de webcam
 
 ### 🗺️ Feuille de Route
 
-**✅ Complété (2025)**
+**✅ Complété (Novembre 2025)**
+
 - [x] Support alphabet complet LSF (26 lettres) - `letters_conditions_extended.py`
 - [x] Détection mots et phrases - `word_detector.py`
 - [x] Multilangue (ASL, LSQ, BSL, etc.) - `language_config.py`
@@ -350,9 +351,25 @@ Les tests utilisent des landmarks synthétiques et ne nécessitent pas de webcam
 - [x] Mode d'apprentissage interactif - `learning_mode.py`
 - [x] Support GPU pour inférence - `gpu_inference.py`
 
-**🚀 En Cours / Planifié**
-- [ ] Intégration GUI des 6 nouvelles fonctionnalités
-- [ ] Dataset étendu 10,000+ samples par lettre
+**🔄 En Cours (Q1 2025)**
+
+- [ ] Intégration GUI des 6 nouveaux modules
+  - [ ] Onglet Mode Apprentissage
+  - [ ] Sélecteur de langues
+  - [ ] Panneau feedback vocal
+  - [ ] Affichage détection mots/phrases
+- [ ] Tests unitaires complets
+  - [ ] Tests `letters_conditions_extended.py`
+  - [ ] Tests `word_detector.py`
+  - [ ] Tests `language_config.py`
+  - [ ] Tests `voice_feedback.py`
+  - [ ] Tests `learning_mode.py`
+  - [ ] Tests `gpu_inference.py`
+- [ ] Conversion modèle sklearn → ONNX
+- [ ] Dataset étendu (10,000+ samples par lettre)
+
+**🚀 Planifié (Q2-Q4 2025)**
+
 - [ ] Modèle transformer pour meilleure précision
 - [ ] Détection bi-manuelle (deux mains simultanées)
 - [ ] API REST pour déploiement web
@@ -361,6 +378,10 @@ Les tests utilisent des landmarks synthétiques et ne nécessitent pas de webcam
 - [ ] Reconnaissance émotions faciales contextuelles
 - [ ] Support langue des signes tactile (DeafBlind)
 - [ ] Intégration réalité augmentée (AR)
+- [ ] Export animations 3D des signes
+- [ ] Système de badges et gamification
+- [ ] Mode multi-utilisateurs pour apprentissage collaboratif
+- [ ] Intégration avec plateformes e-learning (Moodle, Canvas)
 
 ---
 
@@ -543,7 +564,7 @@ Tests use synthetic landmarks and don't require webcam.
 
 ### 🗺️ Roadmap
 
-**✅ Completed (2025)**
+**✅ Completed (November 2025)**
 
 - [x] Full LSF alphabet support (26 letters) - `letters_conditions_extended.py`
 - [x] Word and phrase detection - `word_detector.py`
@@ -552,10 +573,25 @@ Tests use synthetic landmarks and don't require webcam.
 - [x] Interactive learning mode - `learning_mode.py`
 - [x] GPU support for inference - `gpu_inference.py`
 
-**🚀 In Progress / Planned**
+**🔄 In Progress (Q1 2025)**
 
-- [ ] GUI integration of 6 new features
-- [ ] Extended dataset 10,000+ samples per letter
+- [ ] GUI integration of 6 new modules
+  - [ ] Learning Mode tab
+  - [ ] Language selector
+  - [ ] Voice feedback panel
+  - [ ] Word/phrase display
+- [ ] Complete unit tests
+  - [ ] Tests `letters_conditions_extended.py`
+  - [ ] Tests `word_detector.py`
+  - [ ] Tests `language_config.py`
+  - [ ] Tests `voice_feedback.py`
+  - [ ] Tests `learning_mode.py`
+  - [ ] Tests `gpu_inference.py`
+- [ ] sklearn → ONNX model conversion
+- [ ] Extended dataset (10,000+ samples per letter)
+
+**🚀 Planned (Q2-Q4 2025)**
+
 - [ ] Transformer model for better accuracy
 - [ ] Two-handed detection (simultaneous)
 - [ ] REST API for web deployment
@@ -564,6 +600,10 @@ Tests use synthetic landmarks and don't require webcam.
 - [ ] Contextual facial expression recognition
 - [ ] Tactile sign language support (DeafBlind)
 - [ ] Augmented reality (AR) integration
+- [ ] 3D sign animation export
+- [ ] Badge system and gamification
+- [ ] Multi-user mode for collaborative learning
+- [ ] Integration with e-learning platforms (Moodle, Canvas)
 
 ---
 
