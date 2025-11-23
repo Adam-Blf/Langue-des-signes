@@ -4,7 +4,7 @@ numpy<2.0.0
 pillow
 mediapipe
 scikit-learn
-pandas
+pandas<2.2.0
 streamlit
 
 
