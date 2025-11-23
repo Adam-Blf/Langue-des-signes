@@ -84,16 +84,6 @@ class LsfApp:
         self.root = root
         self.root.title("Sign Language Detection - Enhanced (A-Z + Words + Voice + Learning + GPU)")
 
-        # Core detection helpers
-        self.pipeline = SignDetectionPipeline()
-        self.cap: Optional[cv2.VideoCapture] = None
-        self.hands = None
-        self.hand_connections = None
-
-        # Runtime flags
-        self.video_active = False
-        self.detection_active = False
-
         # ✨ NEW: Initialize 6 features
         self.word_detector = WordDetector(pause_threshold=1.5) if HAS_WORD_DETECTION else None
         self.phrase_builder = PhraseBuilder() if HAS_WORD_DETECTION else None
@@ -101,6 +91,16 @@ class LsfApp:
         self.language_manager = LanguageManager() if HAS_MULTILINGUAL else None
         self.learning_mode = LearningMode() if HAS_LEARNING_MODE else None
         self.gpu_inference = GPUInference() if HAS_GPU_ACCELERATION else None
+        
+        # Core detection helpers
+        self.pipeline = SignDetectionPipeline(inference_engine=self.gpu_inference)
+        self.cap: Optional[cv2.VideoCapture] = None
+        self.hands = None
+        self.hand_connections = None
+
+        # Runtime flags
+        self.video_active = False
+        self.detection_active = False
         
         # ✨ NEW: Status indicators for features
         self.words_detected: list[str] = []
@@ -139,6 +139,9 @@ class LsfApp:
         self.history_max_items = 50
         self.history_entries: list[str] = []
 
+        # Theme state
+        self.is_dark_mode = True
+
         # Build the UI then initialise camera + Mediapipe.
         self._configure_styles()
         self._build_ui()
@@ -150,16 +153,143 @@ class LsfApp:
         """Create a consistent visual theme for ttk widgets."""
         try:
             style = ttk.Style()
-            bg = "#ffffff"
-            accent = "#ff66b3"
-            style.configure("App.TFrame", background=bg)
-            style.configure("Video.TLabel", background=bg)
-            style.configure("Letter.TLabel", font=("Segoe UI", 48, "bold"), foreground=accent, background=bg)
-            style.configure("Method.TLabel", font=("Segoe UI", 11), foreground="#6b7280", background=bg)
-            style.configure("Status.TLabel", font=("Segoe UI", 10), foreground="#4b5563", background=bg)
-            style.configure("Sidebar.TFrame", background=bg)
-            style.configure("SidebarHeading.TLabel", font=("Segoe UI", 12, "bold"), foreground="#111827", background=bg)
-            self.root.configure(bg=bg)
+            
+            if self.is_dark_mode:
+                # Modern Dark Theme Palette
+                bg_color = "#1e1e2e"       # Dark blue-grey background
+                fg_color = "#cdd6f4"       # Soft white text
+                accent_color = "#f38ba8"   # Pink accent
+                secondary_bg = "#313244"   # Lighter panel background
+                border_color = "#45475a"   # Border color
+                success_color = "#a6e3a1"  # Green for success/active
+                video_bg = "#11111b"
+                entry_bg = "#181825"
+                method_fg = "#bac2de"
+                status_fg = "#a6adc8"
+            else:
+                # Light Theme Palette
+                bg_color = "#eff1f5"       # Light grey background
+                fg_color = "#4c4f69"       # Dark grey text
+                accent_color = "#d20f39"   # Red/Pink accent
+                secondary_bg = "#e6e9ef"   # Slightly darker background
+                border_color = "#bcc0cc"   # Border color
+                success_color = "#40a02b"  # Green
+                video_bg = "#dce0e8"
+                entry_bg = "#ffffff"
+                method_fg = "#5c5f77"
+                status_fg = "#6c6f85"
+            
+            # Configure root
+            self.root.configure(bg=bg_color)
+            
+            # Use 'clam' theme as base for better customization if available
+            if "clam" in style.theme_names():
+                style.theme_use("clam")
+            
+            # General configurations
+            style.configure(".", 
+                background=bg_color, 
+                foreground=fg_color, 
+                troughcolor=secondary_bg,
+                font=("Segoe UI", 10),
+                borderwidth=0
+            )
+            
+            # Frame styles
+            style.configure("App.TFrame", background=bg_color)
+            style.configure("Sidebar.TFrame", background=secondary_bg, relief="flat")
+            style.configure("Card.TFrame", background=secondary_bg, relief="flat", borderwidth=1, bordercolor=border_color)
+            
+            # Label styles
+            style.configure("TLabel", background=bg_color, foreground=fg_color)
+            style.configure("Video.TLabel", background=video_bg, relief="solid", borderwidth=1, bordercolor=accent_color)
+            
+            style.configure("Letter.TLabel", 
+                font=("Segoe UI", 64, "bold"), 
+                foreground=accent_color, 
+                background=secondary_bg,
+                padding=10
+            )
+            
+            style.configure("Method.TLabel", 
+                font=("Segoe UI", 9), 
+                foreground=method_fg, 
+                background=secondary_bg
+            )
+            
+            style.configure("Status.TLabel", 
+                font=("Segoe UI", 10, "italic"), 
+                foreground=status_fg, 
+                background=bg_color
+            )
+            
+            style.configure("SidebarHeading.TLabel", 
+                font=("Segoe UI", 14, "bold"), 
+                foreground=accent_color, 
+                background=secondary_bg,
+                padding=(0, 10, 0, 5)
+            )
+            
+            # Labelframe
+            style.configure("TLabelframe", 
+                background=secondary_bg, 
+                foreground=accent_color,
+                bordercolor=border_color,
+                borderwidth=1
+            )
+            style.configure("TLabelframe.Label", 
+                background=secondary_bg, 
+                foreground=accent_color,
+                font=("Segoe UI", 10, "bold")
+            )
+            
+            # Button styles
+            style.configure("TButton", 
+                background=secondary_bg, 
+                foreground=fg_color, 
+                borderwidth=0,
+                padding=8,
+                font=("Segoe UI", 10, "bold")
+            )
+            style.map("TButton", 
+                background=[('active', accent_color), ('pressed', accent_color)],
+                foreground=[('active', bg_color), ('pressed', bg_color)]
+            )
+            
+            # Checkbutton & Radiobutton
+            style.configure("TCheckbutton", background=secondary_bg, foreground=fg_color)
+            style.map("TCheckbutton", background=[('active', secondary_bg)])
+            
+            style.configure("TRadiobutton", background=secondary_bg, foreground=fg_color)
+            style.map("TRadiobutton", background=[('active', secondary_bg)])
+            
+            # Entry
+            style.configure("TEntry", 
+                fieldbackground=entry_bg, 
+                foreground=fg_color,
+                insertcolor=fg_color,
+                borderwidth=1,
+                bordercolor=border_color
+            )
+            
+            # Scrollbar
+            style.configure("Vertical.TScrollbar", 
+                background=secondary_bg, 
+                troughcolor=bg_color,
+                arrowcolor=fg_color
+            )
+            
+            # Update Listbox if it exists
+            if hasattr(self, 'history_list'):
+                self.history_list.configure(
+                    bg=entry_bg,
+                    fg=fg_color,
+                    selectbackground=accent_color
+                )
+
+        except Exception:  # pragma: no cover - style errors are non critical
+            LOGGER.debug("Unable to apply custom styles", exc_info=True)
+
         except Exception:  # pragma: no cover - style errors are non critical
             LOGGER.debug("Unable to apply custom styles", exc_info=True)
 
@@ -240,11 +370,26 @@ class LsfApp:
         ttk.Label(sidebar, text="Historique", style="SidebarHeading.TLabel").pack(anchor="w")
         history_frame = ttk.Frame(sidebar, style="Sidebar.TFrame")
         history_frame.pack(fill="both", expand=False, pady=(4, 8))
-        self.history_list = tk.Listbox(history_frame, height=8, activestyle="none")
+        
+        # Styled Listbox
+        self.history_list = tk.Listbox(
+            history_frame, 
+            height=8, 
+            activestyle="none",
+            bg="#181825",
+            fg="#cdd6f4",
+            selectbackground="#f38ba8",
+            selectforeground="#181825",
+            borderwidth=1,
+            highlightthickness=0,
+            relief="flat"
+        )
         self.history_list.pack(side="left", fill="both", expand=True)
+        
         history_scroll = ttk.Scrollbar(history_frame, orient="vertical", command=self.history_list.yview)
         history_scroll.pack(side="right", fill="y")
         self.history_list.configure(yscrollcommand=history_scroll.set)
+        
         ttk.Button(
             sidebar,
             text="Vider l'historique",
@@ -265,61 +410,52 @@ class LsfApp:
         )
         self.transcription_label.pack(fill="x", pady=(4, 8))
 
-        controls = tk.Frame(sidebar, bg="#ffffff", highlightthickness=0, bd=0)
+        controls = ttk.Frame(sidebar, style="Sidebar.TFrame")
         controls.pack(fill="x", pady=(2, 8))
-        tk.Button(
+        
+        ttk.Button(
             controls,
             text="Space",
-            bg="#e5e7eb",
-            activebackground="#d1d5db",
-            fg="#111827",
-            relief="flat",
             command=self.add_space,
-        ).pack(side="left", padx=4)
-        tk.Button(
+        ).pack(side="left", padx=4, expand=True, fill="x")
+        
+        ttk.Button(
             controls,
             text="Backspace",
-            bg="#e5e7eb",
-            activebackground="#d1d5db",
-            fg="#111827",
-            relief="flat",
             command=self.backspace,
-        ).pack(side="left", padx=4)
-        tk.Button(
+        ).pack(side="left", padx=4, expand=True, fill="x")
+        
+        ttk.Button(
             controls,
             text="Clear",
-            bg="#e5e7eb",
-            activebackground="#d1d5db",
-            fg="#111827",
-            relief="flat",
             command=self.clear_transcription,
-        ).pack(side="left", padx=4)
+        ).pack(side="left", padx=4, expand=True, fill="x")
 
     def _build_buttons(self, sidebar: ttk.Frame) -> None:
         """Add the start/stop and quit buttons."""
-        controls = tk.Frame(sidebar, bg="#ffffff", highlightthickness=0, bd=0)
-        controls.pack(fill="x", pady=(4, 0))
-        self.toggle_btn = tk.Button(
+        controls = ttk.Frame(sidebar, style="Sidebar.TFrame")
+        controls.pack(fill="x", pady=(20, 0))
+        
+        self.toggle_btn = ttk.Button(
             controls,
             text="Start detection",
-            bg="#ff66b3",
-            activebackground="#ff4da6",
-            fg="white",
-            activeforeground="white",
-            relief="flat",
             command=self.toggle_detection,
         )
-        self.toggle_btn.pack(side="left", padx=6)
-        tk.Button(
+        self.toggle_btn.pack(side="left", padx=6, expand=True, fill="x")
+        
+        ttk.Button(
             controls,
             text="Quit",
-            bg="#ff66b3",
-            activebackground="#ff4da6",
-            fg="white",
-            activeforeground="white",
-            relief="flat",
             command=self.quit,
-        ).pack(side="right", padx=6)
+        ).pack(side="right", padx=6, expand=True, fill="x")
+        
+        # Theme toggle
+        self.theme_btn = ttk.Button(
+            sidebar,
+            text="☀️ Light Mode",
+            command=self.toggle_theme,
+        )
+        self.theme_btn.pack(fill="x", padx=6, pady=(10, 0))
 
     def _register_variable_callbacks(self) -> None:
         """Keep the pipeline in sync with the sidebar controls."""
@@ -353,7 +489,12 @@ class LsfApp:
     def _init_mediapipe(self):
         """Initialise Mediapipe Hands with resilient error handling."""
         try:
-            return self.mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5)
+            return self.mp_hands.Hands(
+                max_num_hands=1,  # Optimization: Only track one hand
+                model_complexity=1,  # Balance between speed and accuracy
+                min_detection_confidence=0.5, 
+                min_tracking_confidence=0.5
+            )
         except Exception as exc:  # pragma: no cover - external dependency
             LOGGER.exception("Unable to initialise Mediapipe: %s", exc)
             messagebox.showerror(
@@ -580,6 +721,15 @@ class LsfApp:
         """Clear the detection history listbox."""
         self.history_entries.clear()
         self.history_list.delete(0, tk.END)
+
+    def toggle_theme(self) -> None:
+        """Switch between dark and light mode."""
+        self.is_dark_mode = not self.is_dark_mode
+        self._configure_styles()
+        
+        # Update button text
+        if hasattr(self, 'theme_btn'):
+            self.theme_btn.configure(text="☀️ Light Mode" if self.is_dark_mode else "🌙 Dark Mode")
 
 
 def main() -> None:

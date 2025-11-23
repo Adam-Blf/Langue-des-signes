@@ -36,9 +36,10 @@ class SignDetectionPipeline:
         history_size: int = 5,
         min_consensus: int = 2,
         max_misses: int = 5,
-        ml_threshold: float = 0.83,
+        ml_threshold: float = 0.6,
         enable_rules: bool = True,
         enable_ml: bool = True,
+        inference_engine=None,
     ) -> None:
         self.history: Deque[RawDetection] = deque(maxlen=history_size)
         self.miss_count = 0
@@ -47,6 +48,7 @@ class SignDetectionPipeline:
         self.ml_threshold = ml_threshold
         self.enable_rules = enable_rules
         self.enable_ml = enable_ml
+        self.inference_engine = inference_engine
 
     def process(self, hand_landmarks) -> DetectionResult:
         """Process a new frame and return both raw and stabilised detections."""
@@ -88,13 +90,27 @@ class SignDetectionPipeline:
             flat = extract_flattened_landmarks(hand_landmarks)
             if flat is None:
                 return None
-            prediction = predict_ml_with_confidence(flat, self.ml_threshold)
-            if prediction:
-                return RawDetection(
-                    letter=prediction.label,
-                    source="ml",
-                    confidence=prediction.confidence,
-                )
+            
+            if self.inference_engine:
+                import numpy as np
+                # Use GPU/Optimized inference
+                features = np.array(flat, dtype=np.float32)
+                letter, confidence = self.inference_engine.predict(features)
+                if confidence >= self.ml_threshold:
+                    return RawDetection(
+                        letter=letter,
+                        source="ml_gpu",
+                        confidence=confidence,
+                    )
+            else:
+                # Fallback to CPU inference
+                prediction = predict_ml_with_confidence(flat, self.ml_threshold)
+                if prediction:
+                    return RawDetection(
+                        letter=prediction.label,
+                        source="ml",
+                        confidence=prediction.confidence,
+                    )
 
         return None
 

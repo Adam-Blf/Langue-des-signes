@@ -1,187 +1,95 @@
-"""Rule-based heuristics that classify hand landmarks into letters.
+import math
 
-The conditions are intentionally simple and work as a quick fallback when the
-machine-learning model cannot provide a confident prediction.  The module keeps
-its dependencies minimal so it can be unit-tested without mediapipe.
-"""
+def distance_y(point1, point2):
+    return abs(point1.y - point2.y)
 
-from __future__ import annotations
+def distance_x(point1, point2):
+    return abs(point1.x - point2.x)
 
-from dataclasses import dataclass
-from typing import Iterable, Optional, Sequence
+def doigts_tendus(fingers_tips, fingers_dip):
+    return all(f_tip.y < f_dip.y for f_tip, f_dip in zip(fingers_tips, fingers_dip))
 
+def doigts_repliés(fingers_tips, fingers_mcp):
+    return all(f_tip.y > f_mcp.y for f_tip, f_mcp in zip(fingers_tips, fingers_mcp))
 
-@dataclass(frozen=True)
-class Landmark:
-    """Simple container used for typing and testing."""
-
-    x: float
-    y: float
-    z: float = 0.0
-
-
-LandmarkSequence = Sequence[Landmark]
-
-# Mediapipe landmark indices
-WRIST = 0
-THUMB_IP = 3
-THUMB_TIP = 4
-INDEX_MCP = 5
-INDEX_PIP = 6
-INDEX_DIP = 7
-INDEX_TIP = 8
-MIDDLE_PIP = 10
-MIDDLE_DIP = 11
-MIDDLE_TIP = 12
-RING_PIP = 14
-RING_DIP = 15
-RING_TIP = 16
-PINKY_PIP = 18
-PINKY_DIP = 19
-PINKY_TIP = 20
-
-
-def _ensure_landmarks(hand_landmarks) -> LandmarkSequence:
-    """Return a sequence of landmark-like objects."""
-    if isinstance(hand_landmarks, Sequence):
-        return hand_landmarks  # Already a sequence of simple landmarks
-
-    # Mediapipe hands landmark object exposes a `.landmark` attribute
-    return hand_landmarks.landmark
-
-
-def _distance_x(p1: Landmark, p2: Landmark) -> float:
-    return abs(p1.x - p2.x)
-
-
-def _distance_y(p1: Landmark, p2: Landmark) -> float:
-    return abs(p1.y - p2.y)
-
-
-def _are_extended(tips: Iterable[Landmark], joints: Iterable[Landmark]) -> bool:
-    """Return True when each tip is above (y smaller than) its joint."""
-    return all(tip.y < joint.y for tip, joint in zip(tips, joints))
-
-
-def _are_folded(tips: Iterable[Landmark], joints: Iterable[Landmark]) -> bool:
-    """Return True when each tip is below (y greater than) its joint."""
-    return all(tip.y > joint.y for tip, joint in zip(tips, joints))
-
-
-def _detect_a(landmarks: LandmarkSequence) -> Optional[str]:
-    thumb_tip = landmarks[THUMB_TIP]
-    thumb_ip = landmarks[THUMB_IP]
-    index_tip = landmarks[INDEX_TIP]
-    finger_mcp = [landmarks[i] for i in (INDEX_MCP, 9, 13, 17)]
-
-    if not _are_folded([landmarks[i] for i in (INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP)], finger_mcp):
+def detect_letter_rules(hand_landmarks): 
+    """
+    Rule-based detection for French Sign Language alphabet.
+    Based on: https://github.com/Razane1414/Hand-Tracking---Langue-des-signes
+    """
+    if not hand_landmarks:
         return None
 
-    if thumb_tip.y >= thumb_ip.y:
-        return None
+    pouce = hand_landmarks.landmark[4]   # tip du pouce
+    index = hand_landmarks.landmark[8]   # tip de l'index
+    majeur = hand_landmarks.landmark[12]  # tip du majeur
+    annulaire = hand_landmarks.landmark[16]   # tip de l'annulaire
+    auriculaire = hand_landmarks.landmark[20]  # tip de l'auriculaire
 
-    if _distance_x(thumb_tip, index_tip) <= 0.05:
-        return None
+    fingers_tips = [index, majeur, annulaire, auriculaire]
+    fingers_dip = [hand_landmarks.landmark[i] for i in [7, 11, 15, 19]] 
+    fingers_pip = [hand_landmarks.landmark[i] for i in [6, 10, 14, 18]]  
+    fingers_mcp  = [hand_landmarks.landmark[i] for i in [5, 9, 13, 17]]
 
-    return "A"
+    # Lettre A
+    if doigts_repliés(fingers_tips, fingers_mcp) and \
+       pouce.y < hand_landmarks.landmark[2].y and \
+       distance_x(pouce, fingers_tips[0]) > 0.05:
+        return "A"
 
+    # Lettre B
+    if doigts_tendus(fingers_tips, fingers_dip) and \
+       distance_x(pouce, hand_landmarks.landmark[5]) < 0.05 and \
+       pouce.y > fingers_mcp[0].y:
+        return "B"
 
-def _detect_b(landmarks: LandmarkSequence) -> Optional[str]:
-    thumb_tip = landmarks[THUMB_TIP]
-    index_mcp = landmarks[INDEX_MCP]
-    tips = [landmarks[i] for i in (INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP)]
-    dips = [landmarks[i] for i in (INDEX_DIP, MIDDLE_DIP, RING_DIP, PINKY_DIP)]
-    if not _are_extended(tips, dips):
-        return None
+    # LETTRE "C" 
+    distance_pouce_mcp_x = distance_x(pouce, fingers_mcp[0])
+    distance_pouce_mcp_y = distance_y(pouce, fingers_mcp[0])
+    tips_below_dip = all(f_tip.y > f_dip.y for f_tip, f_dip in zip(fingers_tips, fingers_dip))
+    tips_away_from_mcp = all(distance_x(f_tip, f_mcp) > 0.02 for f_tip, f_mcp in zip(fingers_tips, fingers_mcp))
+    distance_pouce_index_y = distance_y(pouce, index)
 
-    if _distance_x(thumb_tip, index_mcp) >= 0.05:
-        return None
-
-    if thumb_tip.y <= index_mcp.y:
-        return None
-
-    return "B"
-
-
-def _detect_c(landmarks: LandmarkSequence) -> Optional[str]:
-    thumb_tip = landmarks[THUMB_TIP]
-    index_tip = landmarks[INDEX_TIP]
-    index_mcp = landmarks[INDEX_MCP]
-    tips = [landmarks[i] for i in (INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP)]
-    dips = [landmarks[i] for i in (INDEX_DIP, MIDDLE_DIP, RING_DIP, PINKY_DIP)]
-    mcps = [landmarks[i] for i in (INDEX_MCP, 9, 13, 17)]
-
-    tips_under_dips = all(tip.y > dip.y for tip, dip in zip(tips, dips))
-    tips_forward = all(_distance_x(tip, mcp) > 0.02 for tip, mcp in zip(tips, mcps))
-    thumb_index_gap = _distance_y(thumb_tip, index_tip)
-    thumb_forward = _distance_x(thumb_tip, index_mcp) > 0.05
-
-    if tips_under_dips and tips_forward and thumb_forward and 0.05 < thumb_index_gap < 0.4:
-        return "C"
-
-    return None
-
-
-def _detect_d(landmarks: LandmarkSequence) -> Optional[str]:
-    index_tip = landmarks[INDEX_TIP]
-    index_dip = landmarks[INDEX_DIP]
-    middle_tip = landmarks[MIDDLE_TIP]
-    middle_pip = landmarks[MIDDLE_PIP]
-    ring_tip = landmarks[RING_TIP]
-    ring_pip = landmarks[RING_PIP]
-    pinky_tip = landmarks[PINKY_TIP]
-    pinky_pip = landmarks[PINKY_PIP]
-    thumb_tip = landmarks[THUMB_TIP]
-
-    index_extended = index_tip.y < index_dip.y
-    others_folded = all(
-        finger_tip.y > finger_pip.y
-        for finger_tip, finger_pip in (
-            (middle_tip, middle_pip),
-            (ring_tip, ring_pip),
-            (pinky_tip, pinky_pip),
-        )
+    if (distance_pouce_mcp_x > 0.05 and
+        distance_pouce_mcp_y < 0.05 and
+        tips_below_dip and 
+        tips_away_from_mcp and
+        0.05 < distance_pouce_index_y < 0.4):
+            return "C"
+    
+    # Lettre "D"
+    index_tendu = index.y < hand_landmarks.landmark[7].y  
+    autres_doigts_repliés = all(
+        f_tip.y > f_pip.y
+        for f_tip, f_pip in zip(fingers_tips[1:], fingers_pip[1:])
     )
-    thumb_near_middle = _distance_x(thumb_tip, middle_tip) < 0.02 and _distance_y(thumb_tip, middle_tip) < 0.04
-
-    if index_extended and others_folded and thumb_near_middle:
+    pouce_proche_majeur = distance_x(pouce, majeur) < 0.02 and distance_y(pouce, majeur) < 0.04
+    if  pouce_proche_majeur and index_tendu and autres_doigts_repliés:
         return "D"
-
-    return None
-
-
-def _detect_f(landmarks: LandmarkSequence) -> Optional[str]:
-    thumb_tip = landmarks[THUMB_TIP]
-    index_tip = landmarks[INDEX_TIP]
-    index_pip = landmarks[INDEX_PIP]
-    ring_mcp = landmarks[13]
-    pinky_mcp = landmarks[17]
-    middle_mcp = landmarks[9]
-
-    other_mcp = [middle_mcp, ring_mcp, pinky_mcp]
-    other_tips = [landmarks[i] for i in (MIDDLE_TIP, RING_TIP, PINKY_TIP)]
-
-    index_curled = index_tip.y > index_pip.y
-    thumb_over_index = thumb_tip.y < index_tip.y
-    thumb_index_close = _distance_x(thumb_tip, index_tip) < 0.05
-    others_straight = _are_extended(other_tips, other_mcp)
-
-    if index_curled and thumb_over_index and thumb_index_close and others_straight:
-        return "F"
-
-    return None
-
-
-DETECTORS = (_detect_a, _detect_b, _detect_c, _detect_d, _detect_f)
-
-
-def detect_letter(hand_landmarks) -> Optional[str]:
-    """Return the detected letter or ``None`` when no rule matches."""
-    landmarks = _ensure_landmarks(hand_landmarks)
-    if len(landmarks) < 21:
-        return None
-
-    return next(
-        (letter for detector in DETECTORS if (letter := detector(landmarks)) is not None),
-        None,
+            
+    # Lettre "F"
+    pouce_above_index = pouce.y < index.y
+    pouce_index_close = distance_x(pouce, index) < 0.05
+    autres_doigts_tendus = all(
+        f_tip.y < f_mcp.y for f_tip, f_mcp in zip(fingers_tips[2:], fingers_mcp[2:]) 
     )
+    index_plié = index.y > hand_landmarks.landmark[6].y  # tip sous PIP
+    pouce_index_contact = distance_x(pouce, index) < 0.05 and index_plié
+
+    if pouce_above_index and pouce_index_close and autres_doigts_tendus and pouce_index_contact:
+        return "F"
+    
+    # Lettre "L"
+    index_tendu = index.y < hand_landmarks.landmark[6].y
+    pouce_tendu = pouce.x > hand_landmarks.landmark[2].x # Approximation
+    autres_replies = doigts_repliés(fingers_tips[1:], fingers_mcp[1:])
+    if index_tendu and autres_replies and distance_x(pouce, index) > 0.1:
+        return "L"
+
+    # Lettre "V"
+    index_majeur_tendus = index.y < hand_landmarks.landmark[6].y and majeur.y < hand_landmarks.landmark[10].y
+    autres_replies = doigts_repliés(fingers_tips[2:], fingers_mcp[2:])
+    if index_majeur_tendus and autres_replies and distance_x(index, majeur) > 0.03:
+        return "V"
+
+    return None
