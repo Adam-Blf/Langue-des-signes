@@ -1,11 +1,10 @@
 customtkinter
-opencv-python
-numpy
-customtkinter
-opencv-python
+opencv-python-headless
+numpy<2.0.0
 pillow
 mediapipe
 scikit-learn
 pandas
-numpy
+streamlit
+
 
