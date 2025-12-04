@@ -74,6 +74,28 @@ def train():
     if best_model:
         print(f"\n🏆 Best Model: {best_name} with {best_score * 100:.2f}% accuracy")
         
+        # Generate and save confusion matrix plot if matplotlib is installed
+        try:
+            import matplotlib.pyplot as plt
+            from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+            y_pred = best_model.predict(X_test)
+            cm = confusion_matrix(y_test, y_pred, labels=best_model.classes_)
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=best_model.classes_)
+
+            fig, ax = plt.subplots(figsize=(10, 10))
+            disp.plot(cmap='Blues', ax=ax)
+            plt.title(f'Confusion Matrix: {best_name}')
+
+            # Save to the same directory as model
+            cm_path = os.path.join(os.path.dirname(model_path), 'confusion_matrix.png')
+            plt.savefig(cm_path)
+            print(f"Confusion matrix saved to {cm_path}")
+        except ImportError:
+            print("Matplotlib not installed, skipping confusion matrix plot.")
+        except Exception as e:
+            print(f"Could not generate confusion matrix: {e}")
+
         # Save model
         with open(model_path, 'wb') as f:
             pickle.dump({'model': best_model, 'type': best_name, 'accuracy': best_score}, f)
