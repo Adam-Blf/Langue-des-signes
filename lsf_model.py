@@ -62,9 +62,17 @@ class LSFDetector:
         # Wrist is landmark 0
         wrist = hand_landmarks.landmark[0]
         
+        # Landmark 9 is Middle Finger MCP
+        middle_mcp = hand_landmarks.landmark[9]
+
+        # Calculate scale (Euclidean distance between wrist and middle_mcp)
+        scale = ((wrist.x - middle_mcp.x)**2 + (wrist.y - middle_mcp.y)**2 + (wrist.z - middle_mcp.z)**2)**0.5
+        if scale == 0:
+            scale = 1.0
+
         coords = []
         for lm in hand_landmarks.landmark:
-            # Normalize relative to wrist
-            coords.extend([lm.x - wrist.x, lm.y - wrist.y, lm.z - wrist.z])
+            # Normalize relative to wrist and scale
+            coords.extend([(lm.x - wrist.x) / scale, (lm.y - wrist.y) / scale, (lm.z - wrist.z) / scale])
             
         return np.array(coords)
