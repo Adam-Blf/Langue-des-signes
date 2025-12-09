@@ -1,10 +1,9 @@
-Dernier commit: 04/12/2025 | Langage principal: Python | Nombre de langages: 1
+![Dernier commit](https://img.shields.io/badge/Dernier%20commit-09/12/2025-brightgreen) ![Langage principal](https://img.shields.io/badge/Langage%20principal-Python-blue) ![Nombre de langages](https://img.shields.io/badge/Nombre%20de%20langages-1-orange)
 
-Construit avec les outils et technologies : 
-Python
+### Construit avec les outils et technologies : 
+![Python](https://img.shields.io/badge/-Python-lightgrey)
 
 🇫🇷 Français | 🇬🇧 Anglais | 🇪🇸 Espagnol | 🇮🇹 Italien | 🇵🇹 Portugais | 🇷🇺 Russe | 🇩🇪 Allemand | 🇹🇷 Turc
-
 
 # Langue-des-signes
 
