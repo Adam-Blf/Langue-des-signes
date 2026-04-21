@@ -1,5 +1,13 @@
 # Langue des Signes · Reconnaissance Multilingue par Computer Vision
 
+![Status](https://img.shields.io/badge/status-production-brightgreen)
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-0097A7?logo=google&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?logo=opencv&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)
+![MIT](https://img.shields.io/badge/license-MIT-blue)
+
 Reconnaissance en temps reel des alphabets de langues des signes via webcam. MediaPipe Hands pour l'extraction des 21 landmarks de la main, classificateur ML entraine sur les coordonnees normalisees. Sept langues supportees.
 
 ## Contexte
