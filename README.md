@@ -1,5 +1,7 @@
 # Langue des Signes · Reconnaissance Multilingue par Computer Vision
 
+[![EFREI Paris](https://img.shields.io/badge/EFREI-Paris-005CA9?style=flat-square&labelColor=000000)](https://www.efrei.fr/)
+
 ![Status](https://img.shields.io/badge/status-production-brightgreen)
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0097A7?logo=google&logoColor=white)
