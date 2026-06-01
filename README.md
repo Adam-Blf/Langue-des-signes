@@ -17,6 +17,28 @@
 
 Reconnaissance en temps reel des alphabets de langues des signes via webcam. MediaPipe Hands pour l'extraction des 21 landmarks de la main, classificateur ML entraine sur les coordonnees normalisees. Sept langues supportees.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    A["Webcam<br/>flux video · OpenCV cv2.VideoCapture"]
+    B["lsf_model.py<br/>MediaPipe Hands · 21 landmarks 3D"]
+    C["Normalisation<br/>bounding box · features geometriques"]
+    D["machine_learning/train_model.py<br/>RandomForest scikit-learn"]
+    E["model.p<br/>modele serialise pickle"]
+    F["detection_pipeline.py<br/>capture · extraction · prediction"]
+    G["gui_main.py<br/>interface desktop Tkinter"]
+    H["streamlit_app.py<br/>interface web Streamlit"]
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    C --> F
+    F --> G
+    F --> H
+```
+
 ## Contexte
 
 Projet personnel orientation Computer Vision et accessibilite. Demontre le pipeline complet · capture video temps reel, extraction de features geometriques, classification supervisee, interface Streamlit et desktop Tkinter.
