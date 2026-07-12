@@ -1,4 +1,4 @@
-# Langue des Signes · Reconnaissance Multilingue par Computer Vision
+# Langue des Signes - Reconnaissance Multilingue par Computer Vision
 
 <!-- adam-badges:start -->
 [![commits](https://img.shields.io/github/commit-activity/t/Adam-Blf/Langue-des-signes?color=001329&label=commits&style=flat-square)](https://github.com/Adam-Blf/Langue-des-signes/commits) [![visites](https://hits.sh/github.com/Adam-Blf/Langue-des-signes.svg?style=flat-square&label=visites&color=001329)](https://hits.sh/github.com/Adam-Blf/Langue-des-signes/) [![last commit](https://img.shields.io/github/last-commit/Adam-Blf/Langue-des-signes?color=D4A437&style=flat-square&label=dernier%20push)](https://github.com/Adam-Blf/Langue-des-signes/commits) [![top language](https://img.shields.io/github/languages/top/Adam-Blf/Langue-des-signes?style=flat-square)](https://github.com/Adam-Blf/Langue-des-signes) [![license](https://img.shields.io/github/license/Adam-Blf/Langue-des-signes?style=flat-square&color=D4A437)](LICENSE)
@@ -21,12 +21,12 @@ Reconnaissance en temps reel des alphabets de langues des signes via webcam. Med
 
 ```mermaid
 flowchart TB
-    A["Webcam<br/>flux video · OpenCV cv2.VideoCapture"]
-    B["lsf_model.py<br/>MediaPipe Hands · 21 landmarks 3D"]
-    C["Normalisation<br/>bounding box · features geometriques"]
+    A["Webcam<br/>flux video - OpenCV cv2.VideoCapture"]
+    B["lsf_model.py<br/>MediaPipe Hands - 21 landmarks 3D"]
+    C["Normalisation<br/>bounding box - features geometriques"]
     D["machine_learning/train_model.py<br/>RandomForest scikit-learn"]
     E["model.p<br/>modele serialise pickle"]
-    F["detection_pipeline.py<br/>capture · extraction · prediction"]
+    F["detection_pipeline.py<br/>capture - extraction - prediction"]
     G["gui_main.py<br/>interface desktop Tkinter"]
     H["streamlit_app.py<br/>interface web Streamlit"]
     A --> B
@@ -41,7 +41,7 @@ flowchart TB
 
 ## Contexte
 
-Projet personnel orientation Computer Vision et accessibilite. Demontre le pipeline complet · capture video temps reel, extraction de features geometriques, classification supervisee, interface Streamlit et desktop Tkinter.
+Projet personnel orientation Computer Vision et accessibilite. Demontre le pipeline complet - capture video temps reel, extraction de features geometriques, classification supervisee, interface Streamlit et desktop Tkinter.
 
 ## Langues supportees
 
@@ -49,20 +49,20 @@ Francais (LSF), Anglais (ASL), Espagnol, Italien, Portugais, Russe, Allemand, Tu
 
 ## Methode
 
-- **Capture** · flux webcam via OpenCV (`cv2.VideoCapture`)
-- **Extraction** · MediaPipe Hands · 21 landmarks 3D par main detectee, normalisation par bounding box
-- **Dataset** · collecte de frames par lettre (script `generate_synthetic_data.py` + collecte manuelle), stockage CSV
-- **Modele** · RandomForestClassifier scikit-learn entraine sur les coordonnees normalisees (`train_model.py`)
-- **Inference** · `detection_pipeline.py` orchestre capture, extraction, prediction
-- **Interfaces** · app desktop Tkinter (`gui_main.py`) et app web Streamlit (`streamlit_app.py`)
+- **Capture** - flux webcam via OpenCV (`cv2.VideoCapture`)
+- **Extraction** - MediaPipe Hands - 21 landmarks 3D par main detectee, normalisation par bounding box
+- **Dataset** - collecte de frames par lettre (script `generate_synthetic_data.py` + collecte manuelle), stockage CSV
+- **Modele** - RandomForestClassifier scikit-learn entraine sur les coordonnees normalisees (`train_model.py`)
+- **Inference** - `detection_pipeline.py` orchestre capture, extraction, prediction
+- **Interfaces** - app desktop Tkinter (`gui_main.py`) et app web Streamlit (`streamlit_app.py`)
 
 ## Stack
 
-- **Langage** · Python 3.11
-- **Vision** · OpenCV, MediaPipe (solutions.hands)
-- **ML** · scikit-learn (RandomForestClassifier), pickle pour la serialisation
-- **UI** · Tkinter (desktop), Streamlit (web)
-- **Deploiement** · render.yaml configure pour Streamlit Cloud / Render
+- **Langage** - Python 3.11
+- **Vision** - OpenCV, MediaPipe (solutions.hands)
+- **ML** - scikit-learn (RandomForestClassifier), pickle pour la serialisation
+- **UI** - Tkinter (desktop), Streamlit (web)
+- **Deploiement** - render.yaml configure pour Streamlit Cloud / Render
 
 ## Structure
 
@@ -109,7 +109,7 @@ MIT
 ---
 
 <p align="center">
-  <sub>Par <a href="https://adam.beloucif.com">Adam Beloucif</a> · Data Engineer & Fullstack Developer · <a href="https://github.com/Adam-Blf">GitHub</a> · <a href="https://www.linkedin.com/in/adambeloucif/">LinkedIn</a></sub>
+  <sub>Par <a href="https://adam.beloucif.com">Adam Beloucif</a> - Data Engineer & Fullstack Developer - <a href="https://github.com/Adam-Blf">GitHub</a> - <a href="https://www.linkedin.com/in/adambeloucif/">LinkedIn</a></sub>
 </p>
 
 
